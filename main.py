@@ -10,9 +10,9 @@ from tensorflow.python.keras.callbacks import ReduceLROnPlateau
 from tensorflow.python.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
 from tensorflow.python.keras.models import load_model
 
-src_path_train = "dataset/imgs/train/"
-src_path_test = "dataset/imgs/test/"
-image = cv.imread('dataset/imgs/test/mixed/img_143.jpg', 0)
+src_path_train = "J:/Jelani/Documents/Coding/Python [Extra]/Datasets/Distracted Driver/imgs/train/"
+src_path_test = "J:/Jelani/Documents/Coding/Python [Extra]/Datasets/Distracted Driver/imgs/test/"
+image = cv.imread('J:/Jelani/Documents/Coding/Python [Extra]/Datasets/Distracted Driver/imgs/test/mixed/img_143.jpg', 0)
 print(image.shape)
 
 # sub_class = os.listdir(src_path_train)
