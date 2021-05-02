@@ -7,7 +7,7 @@ from keras_preprocessing.image import load_img, img_to_array
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.python.keras import Sequential
 from tensorflow.python.keras.callbacks import ReduceLROnPlateau
-from tensorflow.python.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+from tensorflow.python.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, BatchNormalization
 from tensorflow.python.keras.models import load_model
 
 src_path_train = "J:/Jelani/Documents/Coding/Python [Extra]/Datasets/Distracted Driver/imgs/train/"
@@ -40,7 +40,7 @@ train_datagen = ImageDataGenerator(
     shear_range=0.05,
     horizontal_flip=True,
     fill_mode="nearest",
-    validation_split=0.20)
+    validation_split=0.15)
 
 test_datagen = ImageDataGenerator(rescale=1 / 255.0)
 
@@ -75,39 +75,27 @@ test_generator = test_datagen.flow_from_directory(
 )
 
 
-# model = tf.keras.models.Sequential([
-#     tf.keras.layers.Conv2D(32, (3, 3), padding='same', activation='relu', input_shape=(160, 120, 3)),
-#     tf.keras.layers.MaxPooling2D((2, 2), 2),
-#
-#     tf.keras.layers.Conv2D(64, (3, 3), padding='same', activation='relu'),
-#     tf.keras.layers.MaxPooling2D((2, 2), 2),
-#
-#     tf.keras.layers.Conv2D(128, (3, 3), padding='same', activation='relu'),
-#     tf.keras.layers.MaxPooling2D((2, 2), 2),
-#
-#     tf.keras.layers.Flatten(),
-#     tf.keras.layers.Dense(512, activation='relu'),
-#
-#     tf.keras.layers.Dense(1, activation='sigmoid')
-# ])
-
 def prepare_model():
     model = Sequential()
-    model.add(Conv2D(16, (3, 3), padding='same', activation='relu', input_shape=(224, 224, 3)))
+    model.add(Conv2D(32, (3, 3), padding='same', activation='sigmoid', input_shape=(224, 224, 3)))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+    model.add(BatchNormalization())
+
+    model.add(Conv2D(64, (3, 3), padding='same', activation='sigmoid', kernel_initializer='he_uniform'))
+    model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
-    model.add(Conv2D(32, (3, 3), padding='same', activation='relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
-
-    model.add(Conv2D(64, (3, 3), padding='same', activation='relu'))
+    model.add(Conv2D(128, (3, 3), padding='same', activation='sigmoid', kernel_initializer='he_uniform'))
+    model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
     model.add(Flatten())
     model.add(Dropout(0.5, input_shape=(60,)))
-    model.add(Dense(512, activation='relu'))
+    model.add(Dense(512, activation='sigmoid', kernel_initializer='he_uniform'))
 
     model.add(Dense(10, activation='softmax'))
-    model.compile(loss="binary_crossentropy", optimizer="adam", metrics=['accuracy'])
+    model.compile(loss="categorical_crossentropy", optimizer="rmsprop", metrics=['accuracy'])
+    print(model.summary())
     return model
 
 
@@ -135,13 +123,13 @@ modelSummary = model.fit(train_generator,
                          steps_per_epoch=train_generator.n // train_generator.batch_size,
                          validation_steps=valid_generator.n // valid_generator.batch_size,
                          callbacks=[reduce_lr],
-                         epochs=10)
+                         epochs=20)
 
 score = model.evaluate(valid_generator)
 print('Test loss:', score[0])
 print('Test accuracy:', score[1])
 
-model.save(str(os.getcwd()) + 'J:\Jelani\Documents\Coding\Python [Extra]\Models\Distracted Driving')
+model.save(str(os.getcwd()) + 'J:\Jelani\Documents\Coding\Python [Extra]\Models\Distracted Driving\Inattention_1.h5')
 
 plt.plot(modelSummary.history['accuracy'])
 plt.plot(modelSummary.history['val_accuracy'])
@@ -159,8 +147,8 @@ plt.xlabel('Epoch')
 plt.legend(['train', 'test'], loc='upper left')
 plt.show()
 
-img = load_image(image)
-model = load_model(str(os.getcwd()) + 'J:\Jelani\Documents\Coding\Python [Extra]\Models\Distracted Driving')
-model.summary()
-digit = model.predict_classes(img)
-print("Predicted Label : ", digit[0])
+# img = load_image(image)
+# model = load_model(str(os.getcwd()) + 'J:\Jelani\Documents\Coding\Python [Extra]\Models\Distracted Driving')
+# model.summary()
+# digit = model.predict_classes(img)
+# print("Predicted Label : ", digit[0])
