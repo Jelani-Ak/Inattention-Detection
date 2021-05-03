@@ -1,7 +1,5 @@
 import os
-import cv2 as cv
-import numpy as np
-import tensorflow as tf
+import pandas as pd
 import matplotlib.pyplot as plt
 from keras_preprocessing.image import load_img, img_to_array
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
@@ -10,26 +8,40 @@ from tensorflow.python.keras.callbacks import ReduceLROnPlateau
 from tensorflow.python.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, BatchNormalization
 from tensorflow.python.keras.models import load_model
 
+dataset = pd.read_csv(os.getcwd() + '/labels/driver_imgs_list.csv')
+print(dataset.head(5))
+
+# class_poses = {'c0': 'Normal Driving',
+#                'c1': 'Texting - Right',
+#                'c2': 'Talking on the Phone - Right',
+#                'c3': 'Texting - Left',
+#                'c4': 'Talking on the Phone - Left',
+#                'c5': 'Operating the Radio',
+#                'c6': 'Drinking',
+#                'c7': 'Reaching Behind',
+#                'c8': 'Hair and Makeup',
+#                'c9': 'Talking to Passenger'}
+
 src_path_train = "J:/Jelani/Documents/Coding/Python [Extra]/Datasets/Distracted Driver/imgs/train/"
 src_path_test = "J:/Jelani/Documents/Coding/Python [Extra]/Datasets/Distracted Driver/imgs/test/"
-image = cv.imread('J:/Jelani/Documents/Coding/Python [Extra]/Datasets/Distracted Driver/imgs/test/mixed/img_143.jpg', 0)
-print(image.shape)
+# image = cv.imread('J:/Jelani/Documents/Coding/Python [Extra]/Datasets/Distracted Driver/imgs/test/mixed/img_143.jpg', 0)
+# print(image.shape)
 
-# sub_class = os.listdir(src_path_train)
-# sub_class = os.listdir(src_path_test)
-#
-# fig = plt.figure(figsize=(10, 5))
-# path = os.path.join(src_path_test, sub_class[0])
-# for i in range(4):
-#     plt.subplot(240 + 1 + i)
-#     img = plt.imread(os.path.join(src_path_test + '*.jpg'))
-#     plt.imshow(img, cmap=plt.get_cmap('gray'))
-#
-# path = os.path.join(src_path_train, sub_class[1])
-# for i in range(4, 8):
-#     plt.subplot(240 + 1 + i)
-#     img = plt.imread(os.path.join(src_path_train + '*.jpg'))
-#     plt.imshow(img, cmap=plt.get_cmap('gray'))
+# plt.figure(figsize=(12, 20))
+# image_count = 1
+# BASE_URL = src_path_train
+# for directory in os.listdir(BASE_URL):
+#     if directory[0] != '.':
+#         for i, file in enumerate(os.listdir(BASE_URL + directory)):
+#             if i == 1:
+#                 break
+#             else:
+#                 fig = plt.subplot(5, 2, image_count)
+#                 image_count += 1
+#                 image = mpimg.imread(BASE_URL + directory + '/' + file)
+#                 plt.imshow(image)
+#                 plt.title(class_poses[directory])
+#                 plt.show()
 
 train_datagen = ImageDataGenerator(
     rescale=1 / 255.0,
@@ -40,7 +52,7 @@ train_datagen = ImageDataGenerator(
     shear_range=0.05,
     horizontal_flip=True,
     fill_mode="nearest",
-    validation_split=0.15)
+    validation_split=0.20)
 
 test_datagen = ImageDataGenerator(rescale=1 / 255.0)
 
@@ -48,7 +60,7 @@ train_generator = train_datagen.flow_from_directory(
     directory=src_path_train,
     target_size=(224, 224),
     color_mode="rgb",
-    batch_size=8,
+    batch_size=6,
     class_mode="categorical",
     subset='training',
     shuffle=True,
@@ -58,7 +70,7 @@ valid_generator = train_datagen.flow_from_directory(
     directory=src_path_train,
     target_size=(224, 224),
     color_mode="rgb",
-    batch_size=8,
+    batch_size=6,
     class_mode="categorical",
     subset='validation',
     shuffle=True,
@@ -68,7 +80,7 @@ test_generator = test_datagen.flow_from_directory(
     directory=src_path_test,
     target_size=(224, 224),
     color_mode="rgb",
-    batch_size=4,
+    batch_size=2,
     class_mode=None,
     shuffle=False,
     seed=42
@@ -77,23 +89,24 @@ test_generator = test_datagen.flow_from_directory(
 
 def prepare_model():
     model = Sequential()
-    model.add(Conv2D(32, (3, 3), padding='same', activation='sigmoid', input_shape=(224, 224, 3)))
+    model.add(Conv2D(32, (3, 3), padding='same', activation='relu', input_shape=(224, 224, 3)))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
     model.add(BatchNormalization())
 
-    model.add(Conv2D(64, (3, 3), padding='same', activation='sigmoid', kernel_initializer='he_uniform'))
+    model.add(Conv2D(64, (3, 3), padding='same', activation='relu', kernel_initializer='he_uniform'))
     model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
-    model.add(Conv2D(128, (3, 3), padding='same', activation='sigmoid', kernel_initializer='he_uniform'))
+    model.add(Conv2D(128, (3, 3), padding='same', activation='relu', kernel_initializer='he_uniform'))
     model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
     model.add(Flatten())
-    model.add(Dropout(0.5, input_shape=(60,)))
-    model.add(Dense(512, activation='sigmoid', kernel_initializer='he_uniform'))
-
+    model.add(Dropout(0.3, input_shape=(60,)))
+    model.add(Dense(512, activation='relu', kernel_initializer='he_uniform'))
+    model.add(Dense(256, activation='relu', kernel_initializer='he_uniform'))
     model.add(Dense(10, activation='softmax'))
+
     model.compile(loss="categorical_crossentropy", optimizer="rmsprop", metrics=['accuracy'])
     print(model.summary())
     return model
@@ -129,7 +142,7 @@ score = model.evaluate(valid_generator)
 print('Test loss:', score[0])
 print('Test accuracy:', score[1])
 
-model.save(str(os.getcwd()) + 'J:\Jelani\Documents\Coding\Python [Extra]\Models\Distracted Driving\Inattention_1.h5')
+model.save(os.getcwd() + '/exported_models/Inattention_1.h5')
 
 plt.plot(modelSummary.history['accuracy'])
 plt.plot(modelSummary.history['val_accuracy'])
@@ -148,7 +161,7 @@ plt.legend(['train', 'test'], loc='upper left')
 plt.show()
 
 # img = load_image(image)
-# model = load_model(str(os.getcwd()) + 'J:\Jelani\Documents\Coding\Python [Extra]\Models\Distracted Driving')
+# model = load_model('J:\Jelani\Documents\Coding\Python [Extra]\Models\Distracted Driving')
 # model.summary()
 # digit = model.predict_classes(img)
 # print("Predicted Label : ", digit[0])
