@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 from keras_preprocessing.image import load_img, img_to_array
+from matplotlib import pyplot
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.python.keras import Sequential
 from tensorflow.python.keras.callbacks import ReduceLROnPlateau
@@ -93,9 +94,14 @@ def prepare_model():
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
     model.add(BatchNormalization())
 
+    model.add(Conv2D(32, (3, 3), padding='same', activation='relu', kernel_initializer='he_uniform'))
+    model.add(BatchNormalization())
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+
     model.add(Conv2D(64, (3, 3), padding='same', activation='relu', kernel_initializer='he_uniform'))
     model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+
     model.add(Dropout(0.5, input_shape=(60,)))
 
     model.add(Conv2D(64, (3, 3), padding='same', activation='relu', kernel_initializer='he_uniform'))
@@ -126,13 +132,15 @@ modelSummary = model.fit(train_generator,
                          steps_per_epoch=train_generator.n // train_generator.batch_size,
                          validation_steps=valid_generator.n // valid_generator.batch_size,
                          callbacks=[reduce_lr],
-                         epochs=20)
+                         epochs=25)
 
 score = model.evaluate(valid_generator)
 print('Test loss:', score[0])
 print('Test accuracy:', score[1])
 
-model.save(os.getcwd() + '/exported_models/Inattention_1.h5')
+modelName = 'Inattention'
+modelIteration = '2'
+model.save(os.getcwd() + '/exported_models/' + modelName + '_' + modelIteration + '.h5')
 
 plt.plot(modelSummary.history['accuracy'])
 plt.plot(modelSummary.history['val_accuracy'])
@@ -141,6 +149,7 @@ plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
 plt.legend(['Train', 'Test'], loc='upper left')
 plt.show()
+plt.savefig(os.getcwd() + '/graphs/Accuracy - ' + modelName + '_' + modelIteration + '.png')
 
 plt.plot(modelSummary.history['loss'])
 plt.plot(modelSummary.history['val_loss'])
@@ -149,6 +158,7 @@ plt.ylabel('Loss')
 plt.xlabel('Epoch')
 plt.legend(['Train', 'Test'], loc='upper left')
 plt.show()
+plt.savefig(os.getcwd() + '/graphs/Loss - ' + modelName + '_' + modelIteration + '.png')
 
 # img = load_image(image)
 # model = load_model('J:\Jelani\Documents\Coding\Python [Extra]\Models\Distracted Driving')
