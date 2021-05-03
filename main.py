@@ -88,42 +88,31 @@ test_generator = test_datagen.flow_from_directory(
 
 
 def prepare_model():
-    activation = 'sigmoid'
     model = Sequential()
-    model.add(Conv2D(32, 3, activation=activation, padding='same', input_shape=(32, 32, 3)))
+    model.add(Conv2D(32, (3, 3), padding='same', activation='relu', input_shape=(224, 224, 3)))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
     model.add(BatchNormalization())
 
-    model.add(Conv2D(32, 3, activation=activation, padding='same', kernel_initializer='he_uniform'))
+    model.add(Conv2D(64, (3, 3), padding='same', activation='relu', kernel_initializer='he_uniform'))
     model.add(BatchNormalization())
-    model.add(MaxPooling2D())
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+    model.add(Dropout(0.5, input_shape=(60,)))
 
-    model.add(Conv2D(64, 3, activation=activation, padding='same', kernel_initializer='he_uniform'))
+    model.add(Conv2D(64, (3, 3), padding='same', activation='relu', kernel_initializer='he_uniform'))
     model.add(BatchNormalization())
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
-    model.add(Conv2D(64, 3, activation=activation, padding='same', kernel_initializer='he_uniform'))
+    model.add(Conv2D(128, (3, 3), padding='same', activation='relu', kernel_initializer='he_uniform'))
     model.add(BatchNormalization())
-    model.add(MaxPooling2D())
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
     model.add(Flatten())
-    model.add(Dense(128, activation=activation, kernel_initializer='he_uniform'))
+    model.add(Dropout(0.5, input_shape=(60,)))
+    model.add(Dense(512, activation='relu', kernel_initializer='he_uniform'))
     model.add(Dense(10, activation='softmax'))
-
-    model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
+    model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=['accuracy'])
     print(model.summary())
     return model
-
-
-def load_image(filename):
-    # load the image
-    img = load_img(filename, grayscale=True, target_size=(28, 28))
-    # convert to array
-    img = img_to_array(img)
-    # reshape into a single sample with 1 channel
-    img = img.reshape(1, 28, 28, 1)
-    # prepare pixel data
-    img = img.astype('float32')
-    img = img / 255.0
-    return img
 
 
 reduce_lr = ReduceLROnPlateau(monitor='val_loss',
@@ -150,7 +139,7 @@ plt.plot(modelSummary.history['val_accuracy'])
 plt.title('Model Accuracy')
 plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
-plt.legend(['train', 'test'], loc='upper left')
+plt.legend(['Train', 'Test'], loc='upper left')
 plt.show()
 
 plt.plot(modelSummary.history['loss'])
@@ -158,7 +147,7 @@ plt.plot(modelSummary.history['val_loss'])
 plt.title('Model Loss')
 plt.ylabel('Loss')
 plt.xlabel('Epoch')
-plt.legend(['train', 'test'], loc='upper left')
+plt.legend(['Train', 'Test'], loc='upper left')
 plt.show()
 
 # img = load_image(image)
