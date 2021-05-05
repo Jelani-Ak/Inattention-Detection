@@ -1,7 +1,5 @@
 import os
 
-import sns as sns
-
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import time
 import cv2
@@ -12,7 +10,6 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.python.keras import Sequential
 from tensorflow.python.keras.callbacks import ReduceLROnPlateau, TensorBoard
 from tensorflow.python.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, BatchNormalization
-from keras.applications.vgg16 import VGG16
 
 gpus = tf.config.experimental.list_physical_devices('GPU')
 for gpu in gpus:
@@ -23,8 +20,7 @@ print(dataset.head(5))
 
 src_path_train = "J:/Jelani/Documents/Coding/Python [Extra]/Datasets/Distracted Driver/imgs/train/"
 src_path_test = "J:/Jelani/Documents/Coding/Python [Extra]/Datasets/Distracted Driver/imgs/test/"
-image = cv2.imread('J:/Jelani/Documents/Coding/Python [Extra]/Datasets/Distracted Driver/imgs/test/mixed/img_143.jpg',
-                   0)
+image = cv2.imread('J:/Jelani/Documents/Coding/Python [Extra]/Datasets/Distracted Driver/imgs/test/mixed/img_143.jpg', 0)
 print(image.shape)
 
 class_poses = ['c0 Normal Driving',
@@ -67,7 +63,7 @@ train_generator = train_datagen.flow_from_directory(
     directory=src_path_train,
     target_size=(224, 224),
     color_mode="rgb",
-    batch_size=6,
+    batch_size=64,
     class_mode="categorical",
     subset='training',
     shuffle=True,
@@ -77,7 +73,7 @@ valid_generator = train_datagen.flow_from_directory(
     directory=src_path_train,
     target_size=(224, 224),
     color_mode="rgb",
-    batch_size=6,
+    batch_size=64,
     class_mode="categorical",
     subset='validation',
     shuffle=True,
@@ -87,7 +83,7 @@ test_generator = test_datagen.flow_from_directory(
     directory=src_path_test,
     target_size=(224, 224),
     color_mode="rgb",
-    batch_size=2,
+    batch_size=24,
     class_mode=None,
     shuffle=False,
     seed=42
@@ -99,28 +95,28 @@ def prepare_model():
     model = Sequential()
     model.add(Conv2D(32, (3, 3), padding='same', activation='relu', input_shape=(224, 224, 3)))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
-    model.add(BatchNormalization())
+    # model.add(BatchNormalization())
 
     model.add(Conv2D(32, (3, 3), padding='same', activation='relu', kernel_initializer='he_uniform'))
-    model.add(BatchNormalization())
+    # model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
     model.add(Conv2D(64, (3, 3), padding='same', activation='relu', kernel_initializer='he_uniform'))
-    model.add(BatchNormalization())
+    # model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
-    model.add(Dropout(0.5, input_shape=(60,)))
+    model.add(Dropout(0.25, input_shape=(60,)))
 
     model.add(Conv2D(64, (3, 3), padding='same', activation='relu', kernel_initializer='he_uniform'))
-    model.add(BatchNormalization())
+    # model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
     model.add(Conv2D(128, (3, 3), padding='same', activation='relu', kernel_initializer='he_uniform'))
-    model.add(BatchNormalization())
+    # model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
     model.add(Flatten())
-    model.add(Dropout(0.5, input_shape=(60,)))
+    model.add(Dropout(0.25, input_shape=(60,)))
     model.add(Dense(512, activation='relu', kernel_initializer='he_uniform'))
     model.add(Dense(10, activation='softmax'))
     model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=['accuracy'])
@@ -137,6 +133,7 @@ reduce_lr = ReduceLROnPlateau(monitor='val_loss',
                               patience=5,
                               verbose=0,
                               min_lr=0.001)
+
 model = prepare_model()
 early_stopping = tf.keras.callbacks.EarlyStopping(monitor='loss', verbose=1, patience=5)
 modelSummary = model.fit(train_generator,
@@ -151,7 +148,7 @@ print('Test loss:', score[0])
 print('Test accuracy:', score[1])
 
 modelName = 'Inattention-Detection-Model'
-model.save(os.getcwd() + '/exported_models/' + modelName + '_' + timeNow + '.h5')
+model.save(os.getcwd() + '/exported_models/' + modelName + '-' + timeNow + '.h5')
 
 plt.plot(modelSummary.history['accuracy'])
 plt.plot(modelSummary.history['val_accuracy'])
@@ -159,7 +156,7 @@ plt.title('Model Accuracy')
 plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
 plt.legend(['Train', 'Test'], loc='upper left')
-plt.savefig(os.getcwd() + '/graphs/Accuracy - ' + modelName + '_' + timeNow + '.png')
+plt.savefig(os.getcwd() + '/graphs/Accuracy - ' + modelName + '-' + timeNow + '.png')
 plt.show()
 
 plt.plot(modelSummary.history['loss'])
@@ -168,5 +165,5 @@ plt.title('Model Loss')
 plt.ylabel('Loss')
 plt.xlabel('Epoch')
 plt.legend(['Train', 'Test'], loc='upper left')
-plt.savefig(os.getcwd() + '/graphs/Loss - ' + modelName + '_' + timeNow + '.png')
+plt.savefig(os.getcwd() + '/graphs/Loss - ' + modelName + '-' + timeNow + '.png')
 plt.show()

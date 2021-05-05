@@ -3,7 +3,6 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import cv2
 import tensorflow as tf
-from sklearn.metrics import classification_report, confusion_matrix
 
 class_poses = ['Normal Driving',
                'Texting - Right',
@@ -27,7 +26,7 @@ def prepare(filepath):
 model = tf.keras.models.load_model(os.getcwd() + '/exported_models/Inattention_2.h5')
 
 prediction = model.predict(
-    [prepare('J:/Jelani/Documents/Coding/Python [Extra]/Datasets/[Dataset] Unique Distracted Driver/img_24.jpg')])
+    [prepare('J:/Jelani/Documents/Coding/Python [Extra]/Datasets/[Dataset] Unique Distracted Driver/img_12.jpg')])
 print(class_poses[int(prediction[0][0])])
 print(prediction.shape)
 print(prediction)
