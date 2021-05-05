@@ -147,8 +147,10 @@ score = model.evaluate(valid_generator)
 print('Test loss:', score[0])
 print('Test accuracy:', score[1])
 
-modelName = 'Inattention-Detection-Model'
-model.save(os.getcwd() + '/exported_models/' + modelName + '-' + timeNow + '.h5')
+modelName = 'Inattention-Detection-Model' + '-' + timeNow + '.png'
+model.save(os.getcwd() + '/exported_models/' + modelName + '.h5')
+
+# Change it so that directories are created. The directories will take on the date and time as the name
 
 plt.plot(modelSummary.history['accuracy'])
 plt.plot(modelSummary.history['val_accuracy'])
@@ -156,7 +158,7 @@ plt.title('Model Accuracy')
 plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
 plt.legend(['Train', 'Test'], loc='upper left')
-plt.savefig(os.getcwd() + '/graphs/Accuracy - ' + modelName + '-' + timeNow + '.png')
+plt.savefig(os.getcwd() + '/graphs/Accuracy - ' + modelName + '.png')
 plt.show()
 
 plt.plot(modelSummary.history['loss'])
@@ -165,5 +167,5 @@ plt.title('Model Loss')
 plt.ylabel('Loss')
 plt.xlabel('Epoch')
 plt.legend(['Train', 'Test'], loc='upper left')
-plt.savefig(os.getcwd() + '/graphs/Loss - ' + modelName + '-' + timeNow + '.png')
+plt.savefig(os.getcwd() + '/graphs/Loss - ' + modelName + '.png')
 plt.show()
