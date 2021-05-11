@@ -24,7 +24,7 @@ def prepare(filepath):
     return new_array.reshape(-1, image_size, image_size, 3)
 
 
-model = tf.keras.models.load_model(os.getcwd() + '/exported_models/Inattention-Detection-Model-May-05-2021 03 25 45.h5')
+model = tf.keras.models.load_model(os.getcwd() + '/exported_models/Inattention-Detection-Model-May-06-2021 18 00 51.h5')
 
 pathlist = Path('J:/Jelani/Documents/Coding/Python [Extra]/Datasets/[Dataset] Unique Distracted Driver/').glob('*.jpg')
 for path in sorted(pathlist):
