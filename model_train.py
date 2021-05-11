@@ -4,25 +4,16 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['KERAS_BACKEND'] = 'tensorflow'
 import time
 import cv2
-import pandas as pd
-import tensorflow as tf
 import matplotlib.pyplot as plt
-from keras.models import Model
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.python.keras import Sequential, Input
 from tensorflow.python.keras.callbacks import ReduceLROnPlateau, TensorBoard
 from tensorflow.python.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, BatchNormalization
 
-# dataset = pd.read_csv(os.getcwd() + '/labels/driver_imgs_list.csv')
-# print(dataset.head(5))
+train_directory = "/Datasets/imgs/train/"
+test_directory = "/Datasets/imgs/test/"
 
-# model_summary = ''
-
-train_directory = "J:/Jelani/Documents/Coding/Python [Extra]/Datasets/Distracted Driver/imgs/train/"
-test_directory = "J:/Jelani/Documents/Coding/Python [Extra]/Datasets/Distracted Driver/imgs/test/"
-# image = cv2.imread('J:/Jelani/Documents/Coding/Python [Extra]/Datasets/Distracted Driver/imgs/test/mixed/img_143.jpg', 0)
-# print(image.shape)
-
+# Classes to detect
 class_poses = ['c0 Normal Driving',
                'c1 Texting - Right',
                'c2 Talking on the Phone - Right',
@@ -46,6 +37,7 @@ for poses in class_poses:
             break
         break
 
+# Image Augmentation
 train_datagen = ImageDataGenerator(
     rescale=1 / 255.0,
     rotation_range=20,
@@ -55,10 +47,13 @@ train_datagen = ImageDataGenerator(
     shear_range=0.05,
     horizontal_flip=True,
     fill_mode="nearest",
-    validation_split=0.20)
+    validation_split=0.20
+)
 
+# Rescale
 test_datagen = ImageDataGenerator(rescale=1 / 255.0)
 
+# Training set
 train_generator = train_datagen.flow_from_directory(
     directory=train_directory,
     target_size=(160, 120),
@@ -69,6 +64,7 @@ train_generator = train_datagen.flow_from_directory(
     shuffle=True,
     seed=42
 )
+# Validation set
 valid_generator = train_datagen.flow_from_directory(
     directory=train_directory,
     target_size=(160, 120),
@@ -79,6 +75,7 @@ valid_generator = train_datagen.flow_from_directory(
     shuffle=True,
     seed=42
 )
+# Test set
 test_generator = test_datagen.flow_from_directory(
     directory=test_directory,
     target_size=(160, 120),
@@ -90,46 +87,7 @@ test_generator = test_datagen.flow_from_directory(
 )
 
 
-# def create_logs():
-#     textfile = open("Inattention-Detection-{}".format(get_time()) + '.txt', "x")
-#     textfile.write(prepare_model().summary())
-
-# def prepare_model():
-#     model_vgg16 = VGG16(weights='imagenet', include_top=False)
-#     model_vgg16.summary()
-#
-#     # Create your own input format
-#     keras_input = Input(shape=(224, 224, 3), name='image_input')
-#
-#     # Use the generated model
-#     output_vgg16_conv = model_vgg16(keras_input)
-#
-#     # Add the fully-connected layers
-#     x = Flatten(name='flatten')(output_vgg16_conv)
-#     x = Dense(4096, activation='relu', name='fc1')(x)
-#     x = Dense(4096, activation='relu', name='fc2')(x)
-#     x = Dense(10, activation='softmax', name='predictions')(x)
-#
-#     # Create your own model
-#     pretrained_model = Model(inputs=keras_input, outputs=x)
-#     pretrained_model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-#
-#     return pretrained_model
-
-
-# # Bad model remove later
-# def prepare_model():
-#     my_model = Sequential()
-#     my_model.add(Conv2D(16, (3, 3), padding='valid', activation='relu', input_shape=(160, 120, 3)))
-#     my_model.add(Flatten())
-#     my_model.add(Dense(128, activation='relu'))
-#     my_model.add(Dense(10, activation='softmax'))
-#     my_model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=['accuracy'])
-#     print(my_model.summary())
-#     return my_model
-
-
-# Create the model
+# Model structure
 def prepare_model():
     my_model = Sequential()
     my_model.add(Conv2D(32, (3, 3), padding='valid', activation='relu', input_shape=(160, 120, 3)))
@@ -156,11 +114,15 @@ def prepare_model():
     return my_model
 
 
+# Get the current time
 def get_time() -> str:
     return time.strftime("%b-%d-%Y") + ' ' + time.strftime('%H %M %S', time.localtime())
 
 
+# File name
 name = "Inattention-Detection-{}".format(get_time())
+
+# Tensorboard diagnostics
 tensorboard_callback = TensorBoard(log_dir='logs/{}'.format(name))
 
 reduce_lr = ReduceLROnPlateau(monitor='val_loss',
@@ -170,6 +132,8 @@ reduce_lr = ReduceLROnPlateau(monitor='val_loss',
                               min_lr=0.001)
 
 model = prepare_model()
+
+# Train the model
 modelSummary = model.fit(train_generator,
                          validation_data=train_generator,
                          steps_per_epoch=train_generator.n // train_generator.batch_size,
@@ -177,18 +141,17 @@ modelSummary = model.fit(train_generator,
                          # callbacks=[tensorboard_callback],
                          epochs=50)
 
+# Get and print the model evaluation
 score = model.evaluate(valid_generator)
 print('Test loss:', score[0])
 print('Test accuracy:', score[1])
 print(get_time())
 
-modelName = 'Inattention-Detection-Model [Bad Version]' + '-' + get_time()
-# modelName = 'Inattention-Detection-Model' + '-' + get_time()
-# modelName = 'Inattention-Detection-VGG16' + '-' + get_time()
+# Export the model
+modelName = 'Inattention-Detection-Model' + '-' + get_time()
 model.save(os.getcwd() + '/exported_models/' + modelName + '.h5')
 
-# Change it so that directories are created. The directories will take on the date and time as the name
-
+# Plot accuracy
 plt.plot(modelSummary.history['accuracy'])
 plt.plot(modelSummary.history['val_accuracy'])
 plt.title('Model Accuracy')
@@ -198,6 +161,7 @@ plt.legend(['Train', 'Test'], loc='upper left')
 plt.savefig(os.getcwd() + '/graphs/' + modelName + ' - Accuracy.png')
 plt.show()
 
+# Plot loss
 plt.plot(modelSummary.history['loss'])
 plt.plot(modelSummary.history['val_loss'])
 plt.title('Model Loss')
