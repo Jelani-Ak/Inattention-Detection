@@ -10,8 +10,9 @@ from tensorflow.python.keras import Sequential, Input
 from tensorflow.python.keras.callbacks import ReduceLROnPlateau, TensorBoard
 from tensorflow.python.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, BatchNormalization
 
-train_directory = "/Datasets/imgs/train/"
-test_directory = "/Datasets/imgs/test/"
+train_directory = "J:/Jelani/Documents/Coding/Python [Extra]/Datasets/[Dataset] State Farm Driver Distraction/state-farm-distracted-driver-detection/imgs/train"
+test_directory = "J:/Jelani/Documents/Coding/Python [Extra]/Datasets/[Dataset] State Farm Driver Distraction/state-farm-distracted-driver-detection/imgs/test"
+valid_directory = ""
 
 # Classes to detect
 class_poses = ['c0 Normal Driving',
@@ -114,6 +115,16 @@ def prepare_model():
     return my_model
 
 
+def prepare_model():
+    my_model = Sequential()
+    my_model.add(Conv2D(32, (3, 3), padding='valid', activation='relu', input_shape=(160, 120, 3)))
+    my_model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+    my_model.add(BatchNormalization())
+    my_model.add(Dense(10, activation='softmax'))
+    my_model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=['accuracy'])
+    print(my_model.summary())
+    return my_model
+
 # Get the current time
 def get_time() -> str:
     return time.strftime("%b-%d-%Y") + ' ' + time.strftime('%H %M %S', time.localtime())
@@ -138,7 +149,7 @@ modelSummary = model.fit(train_generator,
                          validation_data=train_generator,
                          steps_per_epoch=train_generator.n // train_generator.batch_size,
                          validation_steps=valid_generator.n // valid_generator.batch_size,
-                         # callbacks=[tensorboard_callback],
+                         callbacks=[tensorboard_callback],
                          epochs=50)
 
 # Get and print the model evaluation
